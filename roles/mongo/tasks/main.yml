@@ -1,0 +1,55 @@
+---
+- name: create new mongo DB file
+  file:
+    path: /data/ncf/mongo/core/{{ new_db_file }}
+    state: directory
+
+- name: change version in env file
+  replace:
+    path: /data/ncf/conf/ncf.env
+    regexp: "{{ old_version }}"
+    replace: "{{ version }}"
+
+- name: make a copy of service file
+  shell: cp mongo@.service mongo@.bkp
+  args:
+    chdir: /data/ncf/fleetServices
+
+- name: changing db file in mongo service file
+  replace:
+    path: /data/ncf/fleetServices/mongo@.service
+    regexp: "{{ old_db_file }}"
+    replace: "{{ new_db_file }}"
+
+- name: removing comment in mongo service file
+  replace:
+    path: /data/ncf/fleetServices/mongo@.service
+    regexp: "#"
+    replace: ""
+
+- name: changes in mongo service file in var folder server-1
+  replace:
+    path: /var/run/fleet/units/mongo@1.service
+    regexp: "{{ old_db_file }}"
+    replace: "{{ new_db_file }}"
+  when: ansible_hostname == 'devas01'
+
+- name: changes in mongo service file in var folder server-2
+  replace:
+    path: /var/run/fleet/units/mongo@2.service
+    regexp: "{{ old_db_file }}"
+    replace: "{{ new_db_file }}"
+  when: inventory_hostname != play_hosts[0]
+ 
+- name: stop mongodb
+  shell: sh stop-mongo.sh
+  args:
+    chdir: /data/ncf/scripts/fleet  
+ 
+- pause: seconds=25
+
+- name: start mongodb
+  shell: sh start-mongo.sh
+  args:
+    chdir: /data/ncf/scripts/fleet    
+# tasks file for mongo
