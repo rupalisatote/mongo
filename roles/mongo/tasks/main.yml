@@ -27,6 +27,12 @@
     regexp: "#"
     replace: ""
 
+- name: remove smallfiles from service file
+  lineinfile:
+    path: /data/ncf/fleetServices/mongo@.service   
+    regexp: "--smallfiles"
+    state: absent
+
 - name: changes in mongo service file in var folder server-1
   replace:
     path: /var/run/fleet/units/mongo@1.service
